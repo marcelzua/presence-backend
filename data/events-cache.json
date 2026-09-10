@@ -1,0 +1,61 @@
+{
+  "budapest": {
+    "events": [
+      {
+        "id": "test-1",
+        "name": "Test Event at Akvárium",
+        "venue": "Akvárium",
+        "address": "Erzsébet tér 12, Budapest",
+        "lat": 47.4979,
+        "lng": 19.0533,
+        "date": "2026-09-12T19:00:00+00:00",
+        "timeStart": "21:00",
+        "genres": [
+          "electronic",
+          "club"
+        ],
+        "tags": [],
+        "source": "native",
+        "sourceLabel": "presence",
+        "sourceUrl": "",
+        "description": "",
+        "going": 0,
+        "maybe": 0,
+        "avoid": 0,
+        "localScore": 80,
+        "realScore": 90,
+        "vibeChecks": [],
+        "visibility": "public",
+        "dayOffset": 2
+      },
+      {
+        "id": "ra-2494063",
+        "name": "Massive presents Pola & Bryson",
+        "venue": "The Brightside",
+        "address": "27 Warner St, Fortitude Valley",
+        "lat": 0,
+        "lng": 0,
+        "date": "2026-09-12T00:00:00.000",
+        "timeStart": "15:00",
+        "genres": [
+          "electronic",
+          "club"
+        ],
+        "tags": [],
+        "source": "ra",
+        "sourceLabel": "RA",
+        "sourceUrl": "https://ra.co/events/2494063",
+        "description": "",
+        "going": 0,
+        "maybe": 0,
+        "avoid": 0,
+        "localScore": 85,
+        "realScore": 95,
+        "vibeChecks": [],
+        "visibility": "public",
+        "dayOffset": 2
+      }
+    ],
+    "updatedAt": 1789023461929
+  }
+}

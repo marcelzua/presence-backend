@@ -1,0 +1,145 @@
+{
+  "_note": "Entries marked verified:true were confirmed via live web search (address + calendar URL checked). Entries marked verified:false are from general knowledge and should be spot-checked before going live — names/addresses are very likely correct but calendar URLs were not individually re-verified in this session.",
+
+  "venues": [
+    {
+      "name": "Akvárium Klub",
+      "city": "Budapest",
+      "country": "Hungary",
+      "address": "Erzsébet tér 12, 1051 Budapest",
+      "lat": 47.4979, "lng": 19.0533,
+      "calendarUrl": "https://akvariumklub.hu/en/events/",
+      "genres": ["electronic", "club", "concerts"],
+      "verified": true
+    },
+    {
+      "name": "Berghain",
+      "city": "Berlin",
+      "country": "Germany",
+      "address": "Am Wriezener Bahnhof, 10243 Berlin",
+      "lat": 52.5111, "lng": 13.4431,
+      "calendarUrl": "https://ra.co/clubs/34564",
+      "genres": ["electronic", "club", "techno"],
+      "verified": true,
+      "note": "No official public event calendar — lineups tracked via RA and word of mouth. Door policy based."
+    },
+    {
+      "name": "Kantine am Berghain",
+      "city": "Berlin",
+      "country": "Germany",
+      "address": "Am Wriezener Bahnhof, 10243 Berlin (next to Berghain)",
+      "lat": 52.5112, "lng": 13.4433,
+      "calendarUrl": "https://ra.co/clubs/8742",
+      "genres": ["electronic", "concerts", "art"],
+      "verified": true
+    },
+
+    { "name": "Dürer Kert", "city": "Budapest", "country": "Hungary",
+      "address": "Ajtósi Dürer sor 19-21, 1146 Budapest",
+      "lat": 47.5155, "lng": 19.0876,
+      "calendarUrl": "https://durerkert.com/program",
+      "genres": ["jazz", "outdoor", "concerts"], "verified": false },
+
+    { "name": "Toldi Mozi", "city": "Budapest", "country": "Hungary",
+      "address": "Bajcsy-Zsilinszky út 36-38, 1055 Budapest",
+      "lat": 47.5026, "lng": 19.0537,
+      "calendarUrl": "https://toldimozi.hu/", 
+      "genres": ["film", "theatre"], "verified": false },
+
+    { "name": "A38 Hajó", "city": "Budapest", "country": "Hungary",
+      "address": "Petőfi híd, budai hídfő, 1117 Budapest",
+      "lat": 47.4746, "lng": 19.0552,
+      "calendarUrl": "https://a38.hu/program", 
+      "genres": ["concerts", "electronic"], "verified": false },
+
+    { "name": "Corvintető", "city": "Budapest", "country": "Hungary",
+      "address": "Blaha Lujza tér 1-2, 1085 Budapest",
+      "lat": 47.4954, "lng": 19.0714,
+      "calendarUrl": "https://corvinteto.hu/programok",
+      "genres": ["electronic", "club", "rooftop"], "verified": false },
+
+    { "name": "Sisyphos", "city": "Berlin", "country": "Germany",
+      "address": "Hauptstraße 15, 10317 Berlin",
+      "lat": 52.4784, "lng": 13.4936,
+      "calendarUrl": "https://ra.co/clubs/9147",
+      "genres": ["electronic", "club", "outdoor"], "verified": false },
+
+    { "name": "About Blank", "city": "Berlin", "country": "Germany",
+      "address": "Markgrafendamm 24c, 10245 Berlin",
+      "lat": 52.5023, "lng": 13.4676,
+      "calendarUrl": "https://ra.co/clubs/17722",
+      "genres": ["electronic", "club", "queer"], "verified": false },
+
+    { "name": "Razzmatazz", "city": "Barcelona", "country": "Spain",
+      "address": "Carrer dels Almogàvers 122, 08018 Barcelona",
+      "lat": 41.4013, "lng": 2.1899,
+      "calendarUrl": "https://www.salarazzmatazz.com/en/",
+      "genres": ["electronic", "club", "concerts"], "verified": false },
+
+    { "name": "Moog Barcelona", "city": "Barcelona", "country": "Spain",
+      "address": "Carrer de l'Arc del Teatre 3, 08001 Barcelona",
+      "lat": 41.3763, "lng": 2.1755,
+      "calendarUrl": "https://www.masimas.com/en/moog/",
+      "genres": ["electronic", "techno"], "verified": false },
+
+    { "name": "Smolna", "city": "Warsaw", "country": "Poland",
+      "address": "Smolna 38, 00-375 Warszawa",
+      "lat": 52.2308, "lng": 21.0209,
+      "calendarUrl": "https://ra.co/clubs/94823",
+      "genres": ["electronic", "club"], "verified": false },
+
+    { "name": "Pardon, To Tu", "city": "Warsaw", "country": "Poland",
+      "address": "Ulica Nowy Świat 39, 00-029 Warszawa",
+      "lat": 52.2334, "lng": 21.0193,
+      "calendarUrl": "https://pardontotu.pl/",
+      "genres": ["community", "concerts", "art"], "verified": false },
+
+    { "name": "Flex", "city": "Vienna", "country": "Austria",
+      "address": "Donaukanal / Augartenbrücke, 1010 Wien",
+      "lat": 48.2172, "lng": 16.3652,
+      "calendarUrl": "https://flex.at/programm/",
+      "genres": ["electronic", "club", "concerts"], "verified": false },
+
+    { "name": "Grelle Forelle", "city": "Vienna", "country": "Austria",
+      "address": "Spittelauer Lände 12, 1090 Wien",
+      "lat": 48.2287, "lng": 16.3626,
+      "calendarUrl": "https://ra.co/clubs/15147",
+      "genres": ["electronic", "techno"], "verified": false },
+
+    { "name": "De School", "city": "Amsterdam", "country": "Netherlands",
+      "address": "Dr. Jan van Breemenstraat 1, 1056 AB Amsterdam",
+      "lat": 52.3652, "lng": 4.8560,
+      "calendarUrl": "https://ra.co/clubs/85328",
+      "genres": ["electronic", "club"], "verified": false },
+
+    { "name": "Paradiso", "city": "Amsterdam", "country": "Netherlands",
+      "address": "Weteringschans 6-8, 1017 SG Amsterdam",
+      "lat": 52.3621, "lng": 4.8834,
+      "calendarUrl": "https://www.paradiso.nl/en/", 
+      "genres": ["concerts", "electronic"], "verified": false },
+
+    { "name": "Le Consulat", "city": "Paris", "country": "France",
+      "address": "148 Rue Montmartre, 75002 Paris",
+      "lat": 48.8676, "lng": 2.3448,
+      "calendarUrl": "https://ra.co/clubs/89154",
+      "genres": ["electronic", "club"], "verified": false },
+
+    { "name": "Concrete / Sacrées Sœurs", "city": "Paris", "country": "France",
+      "address": "Port de la Rapée, 75012 Paris",
+      "lat": 48.8437, "lng": 2.3712,
+      "calendarUrl": "https://ra.co/clubs/58419",
+      "genres": ["electronic", "techno"], "verified": false },
+
+    { "name": "fabric", "city": "London", "country": "United Kingdom",
+      "address": "77A Charterhouse St, London EC1M 3HN",
+      "lat": 51.5202, "lng": -0.1023,
+      "calendarUrl": "https://ra.co/clubs/210",
+      "genres": ["electronic", "club"], "verified": false },
+
+    { "name": "XOYO", "city": "London", "country": "United Kingdom",
+      "address": "32-37 Cowper St, London EC2A 4AP",
+      "lat": 51.5265, "lng": -0.0868,
+      "calendarUrl": "https://ra.co/clubs/1439",
+      "genres": ["electronic", "concerts"], "verified": false }
+  ]
+}

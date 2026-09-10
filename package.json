@@ -1,0 +1,18 @@
+{
+  "name": "presence-server-complete",
+  "version": "1.0.0",
+  "description": "- `ra-scraper.js` — pulls real RA event listings for a city (working, tested endpoint) - `venues-seed.json` — 21 real venues across 8 European cities, with addresses and calendar URLs - Verified entries (Akvárium, Berghain, Kantine am Berghain) were confirmed via live search this session - Unverified entries are real venues from general knowledge — spot-check the calendarUrl before relying on it, addresses should be accurate",
+  "main": "ra-scraper.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "node-fetch": "^2.7.0"
+  }
+}
