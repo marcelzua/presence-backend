@@ -96,7 +96,7 @@ async function fetchRA(city) {
   const cityId = CITY_IDS[city.toLowerCase()];
   if (!cityId) return [];
   const today = new Date().toISOString().split('T')[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
 
   try {
     const res = await fetch('https://ra.co/graphql', {
@@ -116,8 +116,8 @@ async function fetchRA(city) {
           }
         }`,
         variables: {
-          filters: { areas: { eq: cityId }, listingDate: { gte: today, lte: nextWeek } },
-          pageSize: 30, page: 1,
+          filters: { areas: { eq: cityId }, listingDate: { gte: today, lte: twoWeeks } },
+          pageSize: 100, page: 1,
         },
       }),
     });
