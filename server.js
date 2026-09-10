@@ -109,15 +109,22 @@ async function fetchRA(city) {
       },
       body: JSON.stringify({
         operationName: 'GET_EVENT_LISTINGS',
-        query: `query GET_EVENT_LISTINGS($filters: FilterInputDtoInput, $pageSize: Int, $page: Int) {
-          eventListings(filters: $filters, pageSize: $pageSize, page: $page) {
+        query: `query GET_EVENT_LISTINGS($filters: FilterInputDtoInput, $filterOptions: FilterOptionsInputDtoInput, $pageSize: Int, $page: Int, $sort: SortInputDtoInput) {
+          eventListings(filters: $filters, filterOptions: $filterOptions, pageSize: $pageSize, page: $page, sort: $sort) {
             data { id event { id title date startTime endTime contentUrl
               venue { id name address } images { filename } } }
+            totalResults
           }
         }`,
         variables: {
-          filters: { areas: { eq: cityId }, listingDate: { gte: today, lte: twoWeeks } },
-          pageSize: 100, page: 1,
+          filters: {
+            areas: { eq: cityId },
+            listingDate: { gte: today, lte: twoWeeks },
+          },
+          filterOptions: { genre: true, eventType: true },
+          pageSize: 250,
+          page: 1,
+          sort: { listingDate: { order: 'ASCENDING' } },
         },
       }),
     });
@@ -126,6 +133,8 @@ async function fetchRA(city) {
     if (data.errors) { console.warn('[RA] errors:', JSON.stringify(data.errors).slice(0,200)); return []; }
 
     const listings = data?.data?.eventListings?.data || [];
+    const total = data?.data?.eventListings?.totalResults;
+    console.log(`[RA] ${city}: ${listings.length} returned, totalResults=${total}`);
     const seen = new Set();
     const unique = listings.filter(item => {
       const id = item?.event?.id;
