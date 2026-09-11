@@ -17,12 +17,35 @@ const REFRESH_MS = 20 * 60 * 1000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://nidysnffspddrptfqaez.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_-GPaui7_Cf4f_F9QAuH1MQ_WcZUTk93';
 
-// Verified RA area IDs. Berlin/London/Paris/Vienna confirmed.
-// Unverified ones may return wrong-country results — see README.
+// Verified RA area IDs where confirmed. For unverified cities we probe candidates
+// and keep whichever returns venues matching the expected country.
 const CITY_IDS = {
   berlin: 34, london: 13, paris: 44, vienna: 450,
   budapest: 12, barcelona: 20, warsaw: 55, amsterdam: 26,
 };
+
+// Candidate IDs to probe when the primary returns wrong-country results
+const CITY_CANDIDATES = {
+  budapest: [128, 12, 219, 90, 117],
+  barcelona: [20, 25, 7, 31],
+  warsaw: [55, 154, 62],
+  amsterdam: [26, 4, 30],
+};
+
+// Substring that should appear in a venue address for the city to be "right"
+const CITY_MARKERS = {
+  budapest: 'budapest',
+  barcelona: 'barcelona',
+  warsaw: 'warsz',
+  amsterdam: 'amsterdam',
+  berlin: 'berlin',
+  london: 'london',
+  paris: 'paris',
+  vienna: 'wien',
+};
+
+// Remember which ID actually worked, so we probe only once per city per boot
+const resolvedIds = {};
 
 const venuesSeed = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'venues-seed.json'), 'utf8')
@@ -92,8 +115,7 @@ async function fetchSupabaseEvents(city) {
 }
 
 // ---------- RESIDENT ADVISOR ----------
-async function fetchRA(city) {
-  const cityId = CITY_IDS[city.toLowerCase()];
+async function fetchRAByAreaId(city, cityId) {
   if (!cityId) return [];
   const today = new Date().toISOString().split('T')[0];
   const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
@@ -122,7 +144,7 @@ async function fetchRA(city) {
             listingDate: { gte: today, lte: twoWeeks },
           },
           filterOptions: { genre: true, eventType: true },
-          pageSize: 250,
+          pageSize: 100
           page: 1,
           sort: { listingDate: { order: 'ASCENDING' } },
         },
@@ -182,6 +204,52 @@ async function fetchRA(city) {
   }
 }
 
+// Does this batch of events actually belong to the city we asked for?
+function matchesCity(events, city) {
+  const marker = CITY_MARKERS[city.toLowerCase()];
+  if (!marker || events.length === 0) return false;
+  const hits = events.filter(e =>
+    (e.address || '').toLowerCase().includes(marker)
+  ).length;
+  return hits / events.length > 0.3;
+}
+
+async function fetchRA(city) {
+  const key = city.toLowerCase();
+
+  // Already resolved this boot
+  if (resolvedIds[key] !== undefined) {
+    if (resolvedIds[key] === null) return [];
+    return fetchRAByAreaId(city, resolvedIds[key]);
+  }
+
+  const primary = CITY_IDS[key];
+  if (primary) {
+    const events = await fetchRAByAreaId(city, primary);
+    if (matchesCity(events, city)) {
+      console.log(`[RA] ${city}: area ${primary} confirmed`);
+      resolvedIds[key] = primary;
+      return events;
+    }
+    console.warn(`[RA] ${city}: area ${primary} returned wrong-country results, probing…`);
+  }
+
+  // Probe candidates
+  const candidates = CITY_CANDIDATES[key] || [];
+  for (const id of candidates) {
+    if (id === primary) continue;
+    const events = await fetchRAByAreaId(city, id);
+    if (matchesCity(events, city)) {
+      console.log(`[RA] ${city}: resolved to area ${id}`);
+      resolvedIds[key] = id;
+      return events;
+    }
+  }
+
+  console.warn(`[RA] ${city}: no working area id found — RA data unavailable`);
+  resolvedIds[key] = null;
+  return [];
+}
 // Match venue names to seed coordinates for map placement
 function enrichWithCoords(events, city) {
   return events.map(ev => {
