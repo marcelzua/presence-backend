@@ -144,7 +144,7 @@ async function fetchRAByAreaId(city, cityId) {
             listingDate: { gte: today, lte: twoWeeks },
           },
           filterOptions: { genre: true, eventType: true },
-          pageSize: 100
+          pageSize: 100,
           page: 1,
           sort: { listingDate: { order: 'ASCENDING' } },
         },
