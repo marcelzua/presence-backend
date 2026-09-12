@@ -256,6 +256,77 @@ async function fetchRA(city) {
   return [];
 }
 // Match venue names to seed coordinates for map placement
+// ---------- GEOCODING (Nominatim) ----------
+const GEO_FILE = path.join(__dirname, 'data', 'geocache.json');
+
+function loadGeo() {
+  try { return JSON.parse(fs.readFileSync(GEO_FILE, 'utf8')); }
+  catch { return {}; }
+}
+function saveGeo(g) {
+  try { fs.writeFileSync(GEO_FILE, JSON.stringify(g, null, 2)); }
+  catch (e) { console.warn('[geo] cache write failed:', e.message); }
+}
+
+const geoCache = loadGeo();
+let geoDirty = false;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function cleanAddress(addr, city) {
+  if (!addr) return null;
+  let a = String(addr).replace(/;/g, ',').replace(/\s+/g, ' ').trim();
+  if (a.length < 4) return null;
+  if (!a.toLowerCase().includes(city.toLowerCase())) a += ', ' + city;
+  return a;
+}
+
+async function geocodeOne(address) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='
+    + encodeURIComponent(address);
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'presence-app/1.0 (event discovery; contact: marcell.szuha@gmail.com)',
+      'Accept': 'application/json',
+    },
+  });
+  if (!res.ok) throw new Error('nominatim ' + res.status);
+  const json = await res.json();
+  if (!json.length) return null;
+  return { lat: parseFloat(json[0].lat), lng: parseFloat(json[0].lon) };
+}
+
+async function geocodeEvents(events, city) {
+  let looked = 0;
+  for (const ev of events) {
+    if (ev.lat && ev.lng) continue;
+    const key = cleanAddress(ev.address, city);
+    if (!key) continue;
+
+    if (geoCache[key] !== undefined) {
+      const hit = geoCache[key];
+      if (hit) { ev.lat = hit.lat; ev.lng = hit.lng; }
+      continue;
+    }
+
+    if (looked >= 25) continue;
+
+    try {
+      await sleep(1100);
+      const coords = await geocodeOne(key);
+      geoCache[key] = coords;
+      geoDirty = true;
+      looked++;
+      if (coords) { ev.lat = coords.lat; ev.lng = coords.lng; }
+    } catch (e) {
+      console.warn('[geo] failed:', key, e.message);
+    }
+  }
+  if (geoDirty) { saveGeo(geoCache); geoDirty = false; }
+  const placed = events.filter(e => e.lat && e.lng).length;
+  console.log('[geo] ' + city + ': ' + placed + '/' + events.length + ' placed (' + looked + ' new lookups)');
+  return events;
+}
 function enrichWithCoords(events, city) {
   return events.map(ev => {
     if (ev.lat && ev.lng) return ev; // already has coords
@@ -275,7 +346,9 @@ async function refreshCity(city) {
     fetchSupabaseEvents(city),
   ]);
   // Manual Supabase events take priority — they're curated
-  const merged = [...supaEvents, ...enrichWithCoords(raEvents, city)];
+  const seeded = enrichWithCoords(raEvents, city);
+  const geocoded = await geocodeEvents(seeded, city);
+  const merged = [...supaEvents, ...geocoded];
   const cache = loadCache();
   cache[city.toLowerCase()] = { events: merged, updatedAt: Date.now() };
   saveCache(cache);
