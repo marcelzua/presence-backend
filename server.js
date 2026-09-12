@@ -346,9 +346,10 @@ async function refreshCity(city) {
     fetchSupabaseEvents(city),
   ]);
   // Manual Supabase events take priority — they're curated
+  // Seed-file coords are instant. Anything already in the geocache is instant too.
   const seeded = enrichWithCoords(raEvents, city);
-  const geocoded = await geocodeEvents(seeded, city);
-  const merged = [...supaEvents, ...geocoded];
+  applyGeoCache(seeded, city);
+  const merged = [...supaEvents, ...seeded];
   const cache = loadCache();
   cache[city.toLowerCase()] = { events: merged, updatedAt: Date.now() };
   saveCache(cache);
@@ -356,6 +357,78 @@ async function refreshCity(city) {
   return merged;
 }
 
+// Fill in coords we already know, and queue anything still missing.
+// Never blocks the response.
+function applyGeoCache(events, city) {
+  const missing = [];
+  for (const ev of events) {
+    if (ev.lat && ev.lng) continue;
+    const key = cleanAddress(ev.address, city);
+    if (!key) continue;
+    const hit = geoCache[key];
+    if (hit) { ev.lat = hit.lat; ev.lng = hit.lng; }
+    else if (hit === undefined) missing.push({ ev, key, city });
+  }
+  if (missing.length) queueGeocode(missing);
+  return events;
+}
+
+// --- background geocode queue, 1 request/sec, never blocks a response ---
+const geoQueue = [];
+let geoRunning = false;
+
+function queueGeocode(items) {
+  for (const it of items) {
+    if (!geoQueue.some(q => q.key === it.key)) geoQueue.push(it);
+  }
+  if (!geoRunning) runGeoQueue();
+}
+
+async function runGeoQueue() {
+  geoRunning = true;
+  while (geoQueue.length) {
+    const item = geoQueue.shift();
+    if (geoCache[item.key] !== undefined) continue;
+    try {
+      await sleep(1100);
+      const coords = await geocodeOne(item.key);
+      geoCache[item.key] = coords;
+      saveGeo(geoCache);
+      if (coords) {
+        // write straight into the cached payload so the next request has it
+        const entry = loadCache()[item.city.toLowerCase()];
+        if (entry) {
+          let touched = false;
+          for (const e of entry.events) {
+            if (!e.lat && cleanAddress(e.address, item.city) === item.key) {
+              e.lat = coords.lat; e.lng = coords.lng; touched = true;
+            }
+          }
+          if (touched) {
+            const c = loadCache();
+            c[item.city.toLowerCase()] = entry;
+            saveCache(c);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[geo] failed:', item.key, e.message);
+    }
+  }
+  geoRunning = false;
+  console.log('[geo] queue drained');
+}
+
+// --- warm every city on boot so the first user never waits ---
+async function warmAllCities() {
+  const cities = Object.keys(CITY_IDS);
+  console.log('[warm] preloading ' + cities.length + ' cities...');
+  for (const c of cities) {
+    try { await refreshCity(c); }
+    catch (e) { console.warn('[warm] ' + c + ' failed:', e.message); }
+  }
+  console.log('[warm] done');
+}
 // ---------- ROUTES ----------
 app.get('/events', async (req, res) => {
   const city = (req.query.city || 'budapest').toLowerCase();
@@ -387,6 +460,8 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`presence. backend running on port ${PORT}`);
   console.log(`Supabase: ${SUPABASE_URL}`);
+  // Warm all cities immediately so the first request is served from cache
+  warmAllCities();
 });
 
 setInterval(() => {
