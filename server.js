@@ -54,21 +54,6 @@ const CITY_IDS = {
   valencia: 607,
 };
 
-// Substring that should appear in a venue address for the city to be "right"
-const CITY_MARKERS = {
-  budapest: 'budapest',
-  barcelona: 'barcelona',
-  warsaw: 'warsz',
-  amsterdam: 'amsterdam',
-  berlin: 'berlin',
-  london: 'london',
-  paris: 'paris',
-  vienna: 'wien',
-};
-
-// Remember which ID actually worked, so we probe only once per city per boot
-const resolvedIds = {};
-
 const venuesSeed = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'venues-seed.json'), 'utf8')
 ).venues;
@@ -226,51 +211,13 @@ async function fetchRAByAreaId(city, cityId) {
   }
 }
 
-// Does this batch of events actually belong to the city we asked for?
-function matchesCity(events, city) {
-  const marker = CITY_MARKERS[city.toLowerCase()];
-  if (!marker || events.length === 0) return false;
-  const hits = events.filter(e =>
-    (e.address || '').toLowerCase().includes(marker)
-  ).length;
-  return hits / events.length > 0.3;
-}
-
 async function fetchRA(city) {
-  const key = city.toLowerCase();
-
-  // Already resolved this boot
-  if (resolvedIds[key] !== undefined) {
-    if (resolvedIds[key] === null) return [];
-    return fetchRAByAreaId(city, resolvedIds[key]);
+  const id = CITY_IDS[city.toLowerCase()];
+  if (!id) {
+    console.warn('[RA] ' + city + ': no area id configured');
+    return [];
   }
-
-  const primary = CITY_IDS[key];
-  if (primary) {
-    const events = await fetchRAByAreaId(city, primary);
-    if (matchesCity(events, city)) {
-      console.log(`[RA] ${city}: area ${primary} confirmed`);
-      resolvedIds[key] = primary;
-      return events;
-    }
-    console.warn(`[RA] ${city}: area ${primary} returned wrong-country results, probing…`);
-  }
-
-  // Probe candidates
-  const candidates = CITY_CANDIDATES[key] || [];
-  for (const id of candidates) {
-    if (id === primary) continue;
-    const events = await fetchRAByAreaId(city, id);
-    if (matchesCity(events, city)) {
-      console.log(`[RA] ${city}: resolved to area ${id}`);
-      resolvedIds[key] = id;
-      return events;
-    }
-  }
-
-  console.warn(`[RA] ${city}: no working area id found — RA data unavailable`);
-  resolvedIds[key] = null;
-  return [];
+  return fetchRAByAreaId(city, id);
 }
 // Match venue names to seed coordinates for map placement
 // ---------- GEOCODING (Nominatim) ----------
