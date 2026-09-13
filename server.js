@@ -141,7 +141,7 @@ async function fetchRAByAreaId(city, cityId) {
         query: `query GET_EVENT_LISTINGS($filters: FilterInputDtoInput, $filterOptions: FilterOptionsInputDtoInput, $pageSize: Int, $page: Int, $sort: SortInputDtoInput) {
           eventListings(filters: $filters, filterOptions: $filterOptions, pageSize: $pageSize, page: $page, sort: $sort) {
             data { id event { id title date startTime endTime contentUrl
-              venue { id name address } images { filename } } }
+              venue { id name address } genres { id name } images { filename } } }
             totalResults
           }
         }`,
@@ -193,8 +193,8 @@ async function fetchRAByAreaId(city, cityId) {
         lat: 0, lng: 0,
         date: ev.date || new Date().toISOString(),
         timeStart,
-        genres: ['electronic', 'club'],
-        tags: [],
+        genres: mapRaGenres(ev.genres),
+        tags: (ev.genres || []).map(g => (g.name || '').toLowerCase()).slice(0, 4),
         source: 'ra', sourceLabel: 'RA',
         sourceUrl: `https://ra.co${ev.contentUrl || ''}`,
         description: '',
@@ -218,6 +218,30 @@ async function fetchRA(city) {
     return [];
   }
   return fetchRAByAreaId(city, id);
+}
+// RA's genre taxonomy -> presence categories.
+// RA is dance-music-first, so most land in electronic/club, but the
+// quieter end (ambient, jazz, experimental) gets its own colour.
+function mapRaGenres(raGenres) {
+  if (!raGenres || !raGenres.length) return ['electronic', 'club'];
+  const names = raGenres.map(g => (g.name || '').toLowerCase());
+  const out = new Set();
+
+  const has = (...keys) => keys.some(k => names.some(n => n.includes(k)));
+
+  if (has('ambient', 'drone', 'downtempo', 'balearic')) out.add('ambient');
+  if (has('jazz', 'soul', 'funk', 'afro', 'latin', 'reggae', 'dub')) out.add('jazz');
+  if (has('experimental', 'noise', 'industrial', 'avant')) out.add('experimental');
+  if (has('live', 'band', 'acoustic')) out.add('jazz');
+
+  if (has('techno', 'house', 'disco', 'electro', 'trance', 'garage',
+          'dnb', 'drum', 'bass', 'breakbeat', 'hardcore', 'minimal',
+          'dubstep', 'grime', 'jungle', 'psy', 'edm', 'bassline')) {
+    out.add('electronic'); out.add('club');
+  }
+
+  if (!out.size) { out.add('electronic'); out.add('club'); }
+  return Array.from(out);
 }
 // Match venue names to seed coordinates for map placement
 // ---------- GEOCODING (Nominatim) ----------
