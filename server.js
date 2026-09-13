@@ -48,6 +48,10 @@ const CITY_IDS = {
   vienna: 450,
   warsaw: 69,
   zagreb: 94,
+  brno: 676,
+  florence: 348,
+  milano: 347,
+  valencia: 607,
 };
 
 // Substring that should appear in a venue address for the city to be "right"
