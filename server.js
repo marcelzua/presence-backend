@@ -323,18 +323,42 @@ async function refreshCity(city) {
 
 // Fill in coords we already know, and queue anything still missing.
 // Never blocks the response.
+// Fill in coords we already know; queue only what's worth looking up now.
+// Dedupes by address (venues repeat constantly) and ignores distant events.
+const GEO_HORIZON_DAYS = 3;
+
 function applyGeoCache(events, city) {
+  const seen = new Set();
   const missing = [];
   for (const ev of events) {
     if (ev.lat && ev.lng) continue;
     const key = cleanAddress(ev.address, city);
     if (!key) continue;
+
     const hit = geoCache[key];
-    if (hit) { ev.lat = hit.lat; ev.lng = hit.lng; }
-    else if (hit === undefined) missing.push({ ev, key, city });
+    if (hit) { ev.lat = hit.lat; ev.lng = hit.lng; continue; }
+    if (hit === null) continue;              // known-bad, don't retry
+
+    if ((ev.dayOffset ?? 0) > GEO_HORIZON_DAYS) continue;
+    if (seen.has(key)) continue;             // same venue, already queued
+    seen.add(key);
+    missing.push({ ev, key, city });
   }
-  if (missing.length) { console.log('[geo] queuing ' + missing.length + ' for ' + city); queueGeocode(missing); }
+  if (missing.length) {
+    console.log('[geo] queuing ' + missing.length + ' unique for ' + city);
+    queueGeocode(missing);
+  }
   return events;
+}
+
+// Move a city's pending lookups to the front — used when someone opens that city
+function prioritiseCity(city) {
+  const c = city.toLowerCase();
+  geoQueue.sort((a, b) => {
+    const av = a.city.toLowerCase() === c ? 0 : 1;
+    const bv = b.city.toLowerCase() === c ? 0 : 1;
+    return av - bv;
+  });
 }
 
 // --- background geocode queue, 1 request/sec, never blocks a response ---
@@ -385,6 +409,8 @@ async function runGeoQueue() {
 }
 
 // --- warm every city on boot so the first user never waits ---
+let nightlyRanToday = false;
+
 async function warmAllCities() {
   const cities = Object.keys(CITY_IDS);
   console.log('[warm] preloading ' + cities.length + ' cities...');
@@ -397,6 +423,7 @@ async function warmAllCities() {
 // ---------- ROUTES ----------
 app.get('/events', async (req, res) => {
   const city = (req.query.city || 'budapest').toLowerCase();
+  prioritiseCity(city);
   const cache = loadCache();
   const entry = cache[city];
   if (entry && Date.now() - entry.updatedAt < REFRESH_MS) {
@@ -427,6 +454,18 @@ app.listen(PORT, () => {
   console.log(`Supabase: ${SUPABASE_URL}`);
   // Warm all cities immediately so the first request is served from cache
   warmAllCities();
+
+  // Nightly sweep at 04:00 server time — refresh every city and let the
+  // queue catch up on anything new while nobody is using the app.
+  setInterval(() => {
+    const h = new Date().getHours();
+    if (h === 4 && !nightlyRanToday) {
+      nightlyRanToday = true;
+      console.log('[nightly] sweep starting');
+      warmAllCities();
+    }
+    if (h !== 4) nightlyRanToday = false;
+  }, 10 * 60 * 1000);
 });
 
 setInterval(() => {
