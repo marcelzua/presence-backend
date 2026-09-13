@@ -333,7 +333,7 @@ function applyGeoCache(events, city) {
     if (hit) { ev.lat = hit.lat; ev.lng = hit.lng; }
     else if (hit === undefined) missing.push({ ev, key, city });
   }
-  if (missing.length) queueGeocode(missing);
+  if (missing.length) { console.log('[geo] queuing ' + missing.length + ' for ' + city); queueGeocode(missing); }
   return events;
 }
 
@@ -355,6 +355,7 @@ async function runGeoQueue() {
     if (geoCache[item.key] !== undefined) continue;
     try {
       await sleep(1100);
+      console.log('[geo] lookup: ' + item.key);
       const coords = await geocodeOne(item.key);
       geoCache[item.key] = coords;
       saveGeo(geoCache);
