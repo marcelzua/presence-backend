@@ -22,19 +22,32 @@ const REFRESH_MS = 20 * 60 * 1000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://nidysnffspddrptfqaez.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_-GPaui7_Cf4f_F9QAuH1MQ_WcZUTk93';
 
-// Verified RA area IDs where confirmed. For unverified cities we probe candidates
-// and keep whichever returns venues matching the expected country.
+// RA area IDs — discovered and validated against returned venue addresses.
+// Brno, Florence, Milano, Valencia unresolved: outside the scanned ID range.
 const CITY_IDS = {
-  berlin: 34, london: 13, paris: 44, vienna: 450,
-  budapest: 12, barcelona: 20, warsaw: 55, amsterdam: 26,
-};
-
-// Candidate IDs to probe when the primary returns wrong-country results
-const CITY_CANDIDATES = {
-  budapest: [128, 12, 219, 90, 117],
-  barcelona: [20, 25, 7, 31],
-  warsaw: [55, 154, 62],
-  amsterdam: [26, 4, 30],
+  amsterdam: 29,
+  athens: 37,
+  barcelona: 20,
+  berlin: 34,
+  brussels: 62,
+  budapest: 78,
+  copenhagen: 99,
+  helsinki: 87,
+  london: 13,
+  lyon: 63,
+  madrid: 41,
+  marseille: 156,
+  moscow: 88,
+  naples: 85,
+  oslo: 57,
+  paris: 44,
+  prague: 97,
+  rome: 25,
+  stockholm: 58,
+  turin: 171,
+  vienna: 450,
+  warsaw: 69,
+  zagreb: 94,
 };
 
 // Substring that should appear in a venue address for the city to be "right"
