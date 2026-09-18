@@ -243,37 +243,6 @@ function mapRaGenres(raGenres) {
   if (!out.size) { out.add('electronic'); out.add('club'); }
   return Array.from(out);
 }
-// ---------- HAND-CORRECTED COORDINATES ----------
-// Some venues geocode badly - a boat gets the bridge, a courtyard gets the
-// street. These always win, over the seed file and over Nominatim.
-let VENUE_OVERRIDES = [];
-try {
-  VENUE_OVERRIDES = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'venue-overrides.json'), 'utf8')
-  ).overrides || [];
-  console.log('[overrides] loaded ' + VENUE_OVERRIDES.length + ' hand-corrected venue(s)');
-} catch (e) {
-  console.warn('[overrides] none loaded:', e.message);
-}
-
-function applyOverrides(events, city) {
-  if (!VENUE_OVERRIDES.length) return events;
-  let hits = 0;
-  for (const ev of events) {
-    const name = (ev.venue || '').toLowerCase();
-    for (const o of VENUE_OVERRIDES) {
-      if (o.city && o.city.toLowerCase() !== city.toLowerCase()) continue;
-      if (!name.includes(String(o.match).toLowerCase())) continue;
-      ev.lat = o.lat;
-      ev.lng = o.lng;
-      if (o.address) ev.address = o.address;
-      hits++;
-      break;
-    }
-  }
-  if (hits) console.log('[overrides] ' + city + ': corrected ' + hits + ' event(s)');
-  return events;
-}
 // Match venue names to seed coordinates for map placement
 // ---------- GEOCODING (Nominatim) ----------
 const GEO_FILE = path.join(__dirname, 'data', 'geocache.json');
@@ -368,7 +337,6 @@ async function refreshCity(city) {
   // Seed-file coords are instant. Anything already in the geocache is instant too.
   const seeded = enrichWithCoords(raEvents, city);
   applyGeoCache(seeded, city);
-  applyOverrides(seeded, city);
   const merged = [...supaEvents, ...seeded];
   const cache = loadCache();
   cache[city.toLowerCase()] = { events: merged, updatedAt: Date.now() };

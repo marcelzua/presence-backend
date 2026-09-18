@@ -1,0 +1,12 @@
+{
+  "_note": "Hand-corrected coordinates. These always win over the seed file and over geocoding. Match is case-insensitive and substring-based on the venue name, so 'A38' catches 'A38 Hajó' too. Add a line whenever you spot a pin in the wrong place.",
+  "overrides": [
+    {
+      "match": "a38",
+      "city": "Budapest",
+      "lat": 47.476659,
+      "lng": 19.062750,
+      "note": "boat moored by Petofi bridge - geocoder puts it on the bridge itself"
+    }
+  ]
+}
