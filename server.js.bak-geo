@@ -274,59 +274,6 @@ function applyOverrides(events, city) {
   if (hits) console.log('[overrides] ' + city + ': corrected ' + hits + ' event(s)');
   return events;
 }
-// ---------- CITY RADIUS ----------
-// RA areas cover a region, not a city: the Budapest area returns events in
-// Gyor and Szeged. Anything geocoded well outside the city gets dropped.
-const CITY_CENTRES = {
-  amsterdam:  [52.3676,  4.9041], athens:    [37.9838, 23.7275],
-  barcelona:  [41.3851,  2.1734], berlin:    [52.5200, 13.4050],
-  brno:       [49.1951, 16.6068], brussels:  [50.8476,  4.3572],
-  budapest:   [47.4979, 19.0402], copenhagen:[55.6761, 12.5683],
-  florence:   [43.7696, 11.2558], helsinki:  [60.1699, 24.9384],
-  london:     [51.5074, -0.1278], lyon:      [45.7640,  4.8357],
-  madrid:     [40.4168, -3.7038], marseille: [43.2965,  5.3698],
-  milano:     [45.4642,  9.1900], moscow:    [55.7558, 37.6173],
-  naples:     [40.8518, 14.2681], oslo:      [59.9139, 10.7522],
-  paris:      [48.8566,  2.3522], prague:    [50.0755, 14.4378],
-  rome:       [41.9028, 12.4964], stockholm: [59.3293, 18.0686],
-  turin:      [45.0703,  7.6869], valencia:  [39.4699, -0.3763],
-  vienna:     [48.2082, 16.3738], warsaw:    [52.2297, 21.0122],
-  zagreb:     [45.8150, 15.9819],
-};
-
-// Generous enough for outer districts and airport-adjacent venues,
-// tight enough to exclude a different city.
-const CITY_RADIUS_KM = 35;
-
-function kmBetween(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng/2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// Events with no coordinates are kept - we cannot judge them, and they still
-// belong in the list even if they never reach the map.
-function dropOutOfTown(events, city) {
-  const centre = CITY_CENTRES[city.toLowerCase()];
-  if (!centre) return events;
-  const kept = [];
-  let dropped = 0;
-  for (const ev of events) {
-    if (!ev.lat || !ev.lng) { kept.push(ev); continue; }
-    const d = kmBetween(centre[0], centre[1], ev.lat, ev.lng);
-    if (d > CITY_RADIUS_KM) {
-      dropped++;
-      continue;
-    }
-    kept.push(ev);
-  }
-  if (dropped) console.log(`[radius] ${city}: dropped ${dropped} event(s) outside ${CITY_RADIUS_KM}km`);
-  return kept;
-}
 // Match venue names to seed coordinates for map placement
 // ---------- GEOCODING (Nominatim) ----------
 const GEO_FILE = path.join(__dirname, 'data', 'geocache.json');
@@ -345,23 +292,12 @@ let geoDirty = false;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// A bare street name with no city or postcode is ambiguous - the same street
-// name exists in a dozen towns. Appending the city name makes the geocoder
-// confidently return the wrong one, so those are left alone instead.
-function looksAmbiguous(a) {
-  const hasPostcode = /\b\d{4,6}\b/.test(a);
-  const hasComma = a.includes(',');
-  return !hasPostcode && !hasComma;
-}
-
 function cleanAddress(addr, city) {
   if (!addr) return null;
   let a = String(addr).replace(/;/g, ',').replace(/\s+/g, ' ').trim();
   if (a.length < 4) return null;
-  if (a.toLowerCase().includes(city.toLowerCase())) return a;
-  // only add the city when the address is specific enough to survive it
-  if (looksAmbiguous(a)) return null;
-  return a + ', ' + city;
+  if (!a.toLowerCase().includes(city.toLowerCase())) a += ', ' + city;
+  return a;
 }
 
 async function geocodeOne(address) {
@@ -433,8 +369,7 @@ async function refreshCity(city) {
   const seeded = enrichWithCoords(raEvents, city);
   applyGeoCache(seeded, city);
   applyOverrides(seeded, city);
-  const inTown = dropOutOfTown(seeded, city);
-  const merged = [...supaEvents, ...inTown];
+  const merged = [...supaEvents, ...seeded];
   const cache = loadCache();
   cache[city.toLowerCase()] = { events: merged, updatedAt: Date.now() };
   saveCache(cache);
